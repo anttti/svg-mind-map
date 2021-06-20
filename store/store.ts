@@ -15,7 +15,10 @@ export type MapNodeInfo = {
     width: number;
     height: number;
   };
-  color: string;
+  color: {
+    stroke: string;
+    fill: string;
+  };
 };
 
 export type State = {

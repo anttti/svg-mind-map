@@ -95,7 +95,7 @@ export default function Connection({ start, end }: Props) {
       )}
       <path
         d={d}
-        stroke="var(--gray-300)"
+        stroke="var(--blue-200)"
         strokeWidth="4"
         fill="transparent"
         onClick={onClick}

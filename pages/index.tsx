@@ -3,55 +3,63 @@ import { useState, useRef } from "react";
 import Connection from "../components/Connection";
 import type { MapNode, MapNodeInfo, State } from "../store/store";
 
+const defaultColor = {
+  stroke: "var(--blue-200)",
+  fill: "var(--blue-50)",
+};
+
 const initialState: State = {
   nodes: {
     "0": {
       id: "0",
       position: {
-        x: 10,
-        y: 10,
+        x: 50,
+        y: 500,
       },
       size: {
         width: 100,
         height: 100,
       },
-      color: "var(--gray-400)",
+      color: {
+        stroke: "var(--pink-400)",
+        fill: "var(--pink-100)",
+      },
     },
     "1": {
       id: "1",
       position: {
-        x: 150,
-        y: 10,
+        x: 250,
+        y: 300,
       },
       size: {
         width: 100,
         height: 100,
       },
-      color: "var(--gray-400)",
+      color: defaultColor,
     },
     "2": {
       id: "2",
       position: {
-        x: 150,
-        y: 150,
+        x: 250,
+        y: 700,
       },
       size: {
         width: 100,
         height: 100,
       },
-      color: "var(--gray-400)",
+      color: defaultColor,
     },
     "3": {
       id: "3",
       position: {
-        x: 300,
-        y: 10,
+        x: 450,
+        y: 100,
       },
       size: {
         width: 100,
         height: 100,
       },
-      color: "var(--gray-400)",
+      color: defaultColor,
     },
   },
   root: {
@@ -90,14 +98,16 @@ const update = (doc: State, id: string, changes: Partial<MapNodeInfo>) => {
 
 const Node = ({
   id,
-  color,
+  stroke,
+  fill,
   x,
   y,
   w,
   h,
 }: {
   id: string;
-  color: string;
+  stroke: string;
+  fill: string;
   x: number;
   y: number;
   w: number;
@@ -111,8 +121,8 @@ const Node = ({
       y={y}
       width={w}
       height={h}
-      fill="white"
-      stroke={color}
+      fill={fill}
+      stroke={stroke}
       strokeWidth="4"
       rx="12"
     ></rect>
@@ -187,7 +197,8 @@ export default function Home() {
           <Node
             key={n.id}
             id={n.id}
-            color={n.color}
+            stroke={n.color.stroke}
+            fill={n.color.fill}
             x={n.position.x}
             y={n.position.y}
             w={n.size.width}
@@ -214,7 +225,8 @@ export default function Home() {
       >
         <Node
           id={rootNode.id}
-          color={rootNode.color}
+          stroke={rootNode.color.stroke}
+          fill={rootNode.color.fill}
           x={rootNode.position.x}
           y={rootNode.position.y}
           w={rootNode.size.width}
