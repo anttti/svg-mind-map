@@ -1,133 +1,10 @@
+import { Just, Nothing } from "purify-ts";
 import { useState, useRef } from "react";
 
 import Connection from "../components/Connection";
-import type { MapNode, MapNodeInfo, State } from "../store/store";
-
-const defaultColor = {
-  stroke: "var(--blue-200)",
-  fill: "var(--blue-50)",
-};
-
-const initialState: State = {
-  nodes: {
-    "0": {
-      id: "0",
-      position: {
-        x: 50,
-        y: 500,
-      },
-      size: {
-        width: 100,
-        height: 100,
-      },
-      color: {
-        stroke: "var(--pink-400)",
-        fill: "var(--pink-100)",
-      },
-    },
-    "1": {
-      id: "1",
-      position: {
-        x: 250,
-        y: 300,
-      },
-      size: {
-        width: 100,
-        height: 100,
-      },
-      color: defaultColor,
-    },
-    "2": {
-      id: "2",
-      position: {
-        x: 250,
-        y: 700,
-      },
-      size: {
-        width: 100,
-        height: 100,
-      },
-      color: defaultColor,
-    },
-    "3": {
-      id: "3",
-      position: {
-        x: 450,
-        y: 100,
-      },
-      size: {
-        width: 100,
-        height: 100,
-      },
-      color: defaultColor,
-    },
-  },
-  root: {
-    id: "0",
-    nodes: [
-      {
-        id: "1",
-        nodes: [
-          {
-            id: "3",
-            nodes: [],
-          },
-        ],
-      },
-      {
-        id: "2",
-        nodes: [],
-      },
-    ],
-  },
-};
-
-const update = (doc: State, id: string, changes: Partial<MapNodeInfo>) => {
-  const node = doc.nodes[id];
-  if (node) {
-    return {
-      ...doc,
-      nodes: {
-        ...doc.nodes,
-        [id]: { ...node, ...changes },
-      },
-    };
-  }
-  return doc;
-};
-
-const Node = ({
-  id,
-  stroke,
-  fill,
-  x,
-  y,
-  w,
-  h,
-}: {
-  id: string;
-  stroke: string;
-  fill: string;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-}) => {
-  return (
-    <rect
-      id={id}
-      className="draggable"
-      x={x}
-      y={y}
-      width={w}
-      height={h}
-      fill={fill}
-      stroke={stroke}
-      strokeWidth="4"
-      rx="12"
-    ></rect>
-  );
-};
+import Node from "../components/Node";
+import type { MapNode, State } from "../store/store";
+import { initialState, update } from "../store/store";
 
 export default function Home() {
   const [elId, setElId] = useState<string | null>(null);
@@ -171,6 +48,25 @@ export default function Home() {
         x: x - parseFloat(target.getAttributeNS(null, "x") as string),
         y: y - parseFloat(target.getAttributeNS(null, "y") as string),
       });
+      setDoc({
+        ...state,
+        selectedNode: Just(target.id),
+      });
+    }
+  };
+
+  const onClick: React.MouseEventHandler<SVGElement> = (e) => {
+    const target = e.nativeEvent.target as SVGElement;
+    if (target.classList.contains("draggable")) {
+      setDoc({
+        ...state,
+        selectedNode: Just(target.id),
+      });
+    } else {
+      setDoc({
+        ...state,
+        selectedNode: Nothing,
+      });
     }
   };
 
@@ -197,6 +93,7 @@ export default function Home() {
           <Node
             key={n.id}
             id={n.id}
+            isSelected={state.selectedNode.equals(Just(n.id))}
             stroke={n.color.stroke}
             fill={n.color.fill}
             x={n.position.x}
@@ -222,9 +119,11 @@ export default function Home() {
         onMouseUp={onEndDrag}
         onMouseMove={onMove}
         onMouseLeave={onEndDrag}
+        onClick={onClick}
       >
         <Node
           id={rootNode.id}
+          isSelected={state.selectedNode.equals(Just(rootNode.id))}
           stroke={rootNode.color.stroke}
           fill={rootNode.color.fill}
           x={rootNode.position.x}
