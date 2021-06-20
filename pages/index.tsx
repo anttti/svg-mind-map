@@ -31,7 +31,7 @@ const gen = (amount: number): DocState => {
       width: 100,
       height: 100,
     },
-    color: "rgb(255 0 0 / 0.5)",
+    color: "var(--gray-400)",
   });
   d.push({
     id: "1",
@@ -44,7 +44,7 @@ const gen = (amount: number): DocState => {
       width: 100,
       height: 100,
     },
-    color: "rgb(0 0 0 / 0.5)",
+    color: "var(--gray-400)",
   });
   return { nodes: d, connections: [["0", "1"]] };
 };
@@ -125,6 +125,13 @@ export default function Home() {
         onMouseMove={onMove}
         onMouseLeave={onEndDrag}
       >
+        {doc.connections.map(([start, end]) => (
+          <Connection
+            key={`${start}${end}`}
+            start={doc.nodes.find((n) => n.id === start)}
+            end={doc.nodes.find((n) => n.id === end)}
+          />
+        ))}
         {doc.nodes.map((el) => (
           <rect
             key={el.id}
@@ -134,15 +141,11 @@ export default function Home() {
             y={el.position.y}
             width={el.size.width}
             height={el.size.height}
-            fill={el.color}
+            fill="transparent"
+            stroke={el.color}
+            strokeWidth="4"
+            rx="12"
           ></rect>
-        ))}
-        {doc.connections.map(([start, end]) => (
-          <Connection
-            key={`${start}${end}`}
-            start={doc.nodes.find((n) => n.id === start)}
-            end={doc.nodes.find((n) => n.id === end)}
-          />
         ))}
       </svg>
     </div>

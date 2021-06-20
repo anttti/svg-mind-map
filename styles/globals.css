@@ -1,3 +1,8 @@
+:root {
+  --gray-300: rgb(209, 213, 219);
+  --gray-400: rgb(156, 163, 175);
+}
+
 * {
   margin: 0;
   padding: 0;

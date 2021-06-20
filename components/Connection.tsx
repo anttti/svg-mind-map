@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { DocNode } from "../store/store";
 
 type Props = {
@@ -6,9 +7,15 @@ type Props = {
 };
 
 export default function Connection({ start, end }: Props) {
+  const [isSelected, setIsSelected] = useState(false);
+
   if (!start || !end) {
     return null;
   }
+
+  const onClick = () => {
+    setIsSelected(!isSelected);
+  };
 
   let connStartX = 0;
   let connStartY = 0;
@@ -28,7 +35,7 @@ export default function Connection({ start, end }: Props) {
       ? Math.abs(end.position.y - start.position.y + start.size.height)
       : Math.abs(start.position.y - end.position.y + end.size.height);
 
-  if (start.position.x + start.size.width < end.position.x) {
+  if (start.position.x + start.size.width * 1.5 < end.position.x) {
     // Start is to the left of end
     connStartX = start.position.x + start.size.width;
     connEndX = end.position.x;
@@ -38,7 +45,7 @@ export default function Connection({ start, end }: Props) {
     curveY1 = start.position.y + start.size.height / 2;
     curveX2 = start.position.x + start.size.width + 0.33 * xDist;
     curveY2 = end.position.y + (end.size.height - end.size.height / 2);
-  } else if (start.position.x > end.position.x + end.size.width) {
+  } else if (start.position.x > end.position.x + end.size.width * 1.5) {
     // Start is to the right of end
     connStartX = start.position.x;
     connEndX = end.position.x + end.size.width;
@@ -72,9 +79,19 @@ export default function Connection({ start, end }: Props) {
   const d = `M ${connStartX} ${connStartY} C ${curveX1} ${curveY1}, ${curveX2} ${curveY2}, ${connEndX} ${connEndY}`;
   return (
     <>
-      <circle cx={curveX1} cy={curveY1} r="5" fill="red" />
-      <circle cx={curveX2} cy={curveY2} r="5" />
-      <path d={d} stroke="black" fill="transparent" />
+      {isSelected && (
+        <>
+          <circle cx={curveX1} cy={curveY1} r="5" fill="red" />
+          <circle cx={curveX2} cy={curveY2} r="5" />
+        </>
+      )}
+      <path
+        d={d}
+        stroke="var(--gray-300)"
+        strokeWidth="4"
+        fill="transparent"
+        onClick={onClick}
+      />
     </>
   );
 }
