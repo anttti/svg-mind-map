@@ -1,63 +1,122 @@
 import { useState, useRef } from "react";
 
 import Connection from "../components/Connection";
-import type { DocNode, DocState } from "../store/store";
+import type { MapNode, MapNodeInfo, State } from "../store/store";
 
-const gen = (amount: number): DocState => {
-  const d: DocNode[] = [];
-  // for (let i = 0; i < amount; i++) {
-  // d.push({
-  //   id: String(i),
-  //   type: "rect",
-  //   position: {
-  //     x: Math.floor(Math.random() * 500),
-  //     y: Math.floor(Math.random() * 500),
-  //   },
-  //   size: {
-  //     width: Math.floor(Math.random() * 100) + 30,
-  //     height: Math.floor(Math.random() * 100) + 30,
-  //   },
-  //   color: "rgb(255 0 0 / 0.5)",
-  // });
-  // }
-  d.push({
+const initialState: State = {
+  nodes: {
+    "0": {
+      id: "0",
+      position: {
+        x: 10,
+        y: 10,
+      },
+      size: {
+        width: 100,
+        height: 100,
+      },
+      color: "var(--gray-400)",
+    },
+    "1": {
+      id: "1",
+      position: {
+        x: 150,
+        y: 10,
+      },
+      size: {
+        width: 100,
+        height: 100,
+      },
+      color: "var(--gray-400)",
+    },
+    "2": {
+      id: "2",
+      position: {
+        x: 150,
+        y: 150,
+      },
+      size: {
+        width: 100,
+        height: 100,
+      },
+      color: "var(--gray-400)",
+    },
+    "3": {
+      id: "3",
+      position: {
+        x: 300,
+        y: 10,
+      },
+      size: {
+        width: 100,
+        height: 100,
+      },
+      color: "var(--gray-400)",
+    },
+  },
+  root: {
     id: "0",
-    type: "rect",
-    position: {
-      x: 10,
-      y: 10,
-    },
-    size: {
-      width: 100,
-      height: 100,
-    },
-    color: "var(--gray-400)",
-  });
-  d.push({
-    id: "1",
-    type: "rect",
-    position: {
-      x: 200,
-      y: 200,
-    },
-    size: {
-      width: 100,
-      height: 100,
-    },
-    color: "var(--gray-400)",
-  });
-  return { nodes: d, connections: [["0", "1"]] };
+    nodes: [
+      {
+        id: "1",
+        nodes: [
+          {
+            id: "3",
+            nodes: [],
+          },
+        ],
+      },
+      {
+        id: "2",
+        nodes: [],
+      },
+    ],
+  },
 };
 
-const update = (doc: DocState, id: string, changes: Partial<DocNode>) => {
-  const node = doc.nodes.find((n) => n.id === id);
+const update = (doc: State, id: string, changes: Partial<MapNodeInfo>) => {
+  const node = doc.nodes[id];
   if (node) {
     return {
       ...doc,
-      nodes: [...doc.nodes.filter((n) => n.id !== id), { ...node, ...changes }],
+      nodes: {
+        ...doc.nodes,
+        [id]: { ...node, ...changes },
+      },
     };
   }
   return doc;
+};
+
+const Node = ({
+  id,
+  color,
+  x,
+  y,
+  w,
+  h,
+}: {
+  id: string;
+  color: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}) => {
+  return (
+    <rect
+      id={id}
+      className="draggable"
+      x={x}
+      y={y}
+      width={w}
+      height={h}
+      fill="white"
+      stroke={color}
+      strokeWidth="4"
+      rx="12"
+    ></rect>
+  );
 };
 
 export default function Home() {
@@ -67,7 +126,7 @@ export default function Home() {
     y: 0,
   });
   const svg = useRef<SVGSVGElement>(null);
-  const [doc, setDoc] = useState<DocState>(gen(2));
+  const [state, setDoc] = useState<State>(initialState);
 
   const getMousePos = (e: { clientX: number; clientY: number }) => {
     if (svg.current) {
@@ -84,16 +143,12 @@ export default function Home() {
   const onMove: React.MouseEventHandler<SVGElement> = (e) => {
     if (elId && svg.current) {
       e.preventDefault();
-      const ctm = svg.current.getScreenCTM();
-      const el = document.getElementById(elId);
-      if (ctm && el) {
-        const { x, y } = getMousePos(e);
-        setDoc(
-          update(doc, elId, {
-            position: { x: x - dragOffset.x, y: y - dragOffset.y },
-          })
-        );
-      }
+      const { x, y } = getMousePos(e);
+      setDoc(
+        update(state, elId, {
+          position: { x: x - dragOffset.x, y: y - dragOffset.y },
+        })
+      );
     }
   };
 
@@ -113,6 +168,38 @@ export default function Home() {
     setElId(null);
   };
 
+  const renderRects = (
+    nodes: ReadonlyArray<MapNode>,
+    parent: MapNode
+  ): ReadonlyArray<JSX.Element> | null => {
+    if (nodes.length === 0) {
+      return null;
+    }
+
+    return nodes
+      .map((node) => {
+        const n = state.nodes[node.id];
+        const p = state.nodes[parent.id];
+        const children = renderRects(node.nodes, node);
+        return [
+          ...(children ? children : []),
+          <Connection key={`${parent.id}${n.id}`} start={p} end={n} />,
+          <Node
+            key={n.id}
+            id={n.id}
+            color={n.color}
+            x={n.position.x}
+            y={n.position.y}
+            w={n.size.width}
+            h={n.size.height}
+          />,
+        ];
+      })
+      .flat();
+  };
+
+  const rootNode = state.nodes[state.root.id];
+
   return (
     <div className="app">
       <svg
@@ -125,28 +212,15 @@ export default function Home() {
         onMouseMove={onMove}
         onMouseLeave={onEndDrag}
       >
-        {doc.connections.map(([start, end]) => (
-          <Connection
-            key={`${start}${end}`}
-            start={doc.nodes.find((n) => n.id === start)}
-            end={doc.nodes.find((n) => n.id === end)}
-          />
-        ))}
-        {doc.nodes.map((el) => (
-          <rect
-            key={el.id}
-            id={el.id}
-            className="draggable"
-            x={el.position.x}
-            y={el.position.y}
-            width={el.size.width}
-            height={el.size.height}
-            fill="transparent"
-            stroke={el.color}
-            strokeWidth="4"
-            rx="12"
-          ></rect>
-        ))}
+        <Node
+          id={rootNode.id}
+          color={rootNode.color}
+          x={rootNode.position.x}
+          y={rootNode.position.y}
+          w={rootNode.size.width}
+          h={rootNode.size.height}
+        />
+        {renderRects(state.root.nodes, state.root)}
       </svg>
     </div>
   );

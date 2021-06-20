@@ -1,8 +1,12 @@
 export type ID = string;
 
-export type DocNode = {
+export type MapNode = {
   id: ID;
-  type: "rect";
+  nodes: ReadonlyArray<MapNode>;
+};
+
+export type MapNodeInfo = {
+  id: ID;
   position: {
     x: number;
     y: number;
@@ -14,7 +18,9 @@ export type DocNode = {
   color: string;
 };
 
-export type DocState = {
-  nodes: ReadonlyArray<DocNode>;
-  connections: ReadonlyArray<[ID, ID]>;
+export type State = {
+  root: MapNode;
+  nodes: {
+    [id: string]: MapNodeInfo;
+  };
 };

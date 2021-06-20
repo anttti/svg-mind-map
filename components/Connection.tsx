@@ -1,9 +1,9 @@
 import { useState } from "react";
-import type { DocNode } from "../store/store";
+import type { MapNodeInfo } from "../store/store";
 
 type Props = {
-  start?: DocNode;
-  end?: DocNode;
+  start?: MapNodeInfo;
+  end?: MapNodeInfo;
 };
 
 export default function Connection({ start, end }: Props) {
@@ -35,7 +35,11 @@ export default function Connection({ start, end }: Props) {
       ? Math.abs(end.position.y - start.position.y + start.size.height)
       : Math.abs(start.position.y - end.position.y + end.size.height);
 
-  if (start.position.x + start.size.width * 1.5 < end.position.x) {
+  if (
+    start.position.x + start.size.width * 1.5 < end.position.x ||
+    (start.position.x + start.size.width < end.position.x &&
+      start.position.y < end.position.y + end.size.height * 1.5)
+  ) {
     // Start is to the left of end
     connStartX = start.position.x + start.size.width;
     connEndX = end.position.x;
@@ -45,7 +49,11 @@ export default function Connection({ start, end }: Props) {
     curveY1 = start.position.y + start.size.height / 2;
     curveX2 = start.position.x + start.size.width + 0.33 * xDist;
     curveY2 = end.position.y + (end.size.height - end.size.height / 2);
-  } else if (start.position.x > end.position.x + end.size.width * 1.5) {
+  } else if (
+    start.position.x > end.position.x + end.size.width * 1.5 ||
+    (end.position.x + end.size.width < start.position.x &&
+      start.position.y < end.position.y + end.size.height * 1.5)
+  ) {
     // Start is to the right of end
     connStartX = start.position.x;
     connEndX = end.position.x + end.size.width;
