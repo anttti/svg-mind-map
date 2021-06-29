@@ -113,18 +113,23 @@ export const initialState: State = {
 
 export const update = (
   doc: State,
-  id: string,
+  maybeId: Maybe<string>,
   changes: Partial<MapNodeInfo>
 ) => {
-  const node = doc.nodes[id];
-  if (node) {
-    return {
-      ...doc,
-      nodes: {
-        ...doc.nodes,
-        [id]: { ...node, ...changes },
-      },
-    };
-  }
-  return doc;
+  return maybeId.caseOf({
+    Nothing: () => doc,
+    Just: (id) => {
+      const node = doc.nodes[id];
+      if (node) {
+        return {
+          ...doc,
+          nodes: {
+            ...doc.nodes,
+            [id]: { ...node, ...changes },
+          },
+        };
+      }
+      return doc;
+    },
+  });
 };

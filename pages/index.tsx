@@ -1,5 +1,5 @@
-import { Just, Nothing } from "purify-ts";
-import { useState, useRef } from "react";
+import { Maybe, Just, Nothing } from "purify-ts";
+import { useState, useEffect, useRef } from "react";
 
 import Connection from "../components/Connection";
 import Node from "../components/Node";
@@ -7,7 +7,7 @@ import type { MapNode, State } from "../store/store";
 import { initialState, update } from "../store/store";
 
 export default function Home() {
-  const [elId, setElId] = useState<string | null>(null);
+  const [elId, setElId] = useState<Maybe<string>>(Nothing);
   const [dragOffset, setDragOffset] = useState<{ x: number; y: number }>({
     x: 0,
     y: 0,
@@ -28,7 +28,7 @@ export default function Home() {
   };
 
   const onMove: React.MouseEventHandler<SVGElement> = (e) => {
-    if (elId && svg.current) {
+    if (elId.isJust() && svg.current) {
       e.preventDefault();
       const { x, y } = getMousePos(e);
       setDoc(
@@ -42,8 +42,8 @@ export default function Home() {
   const onStartDrag: React.MouseEventHandler<SVGElement> = (e) => {
     const target = e.nativeEvent.target as SVGElement;
     if (target.classList.contains("draggable")) {
-      setElId(target.id);
       const { x, y } = getMousePos(e);
+      setElId(Just(target.id));
       setDragOffset({
         x: x - parseFloat(target.getAttributeNS(null, "x") as string),
         y: y - parseFloat(target.getAttributeNS(null, "y") as string),
@@ -57,21 +57,16 @@ export default function Home() {
 
   const onClick: React.MouseEventHandler<SVGElement> = (e) => {
     const target = e.nativeEvent.target as SVGElement;
-    if (target.classList.contains("draggable")) {
-      setDoc({
-        ...state,
-        selectedNode: Just(target.id),
-      });
-    } else {
-      setDoc({
-        ...state,
-        selectedNode: Nothing,
-      });
-    }
+    setDoc({
+      ...state,
+      selectedNode: target.classList.contains("draggable")
+        ? Just(target.id)
+        : Nothing,
+    });
   };
 
   const onEndDrag: React.MouseEventHandler<SVGElement> = (e) => {
-    setElId(null);
+    setElId(Nothing);
   };
 
   const renderRects = (
@@ -108,9 +103,36 @@ export default function Home() {
 
   const rootNode = state.nodes[state.root.id];
 
+  const { selectedNode } = state;
+  useEffect(() => {
+    const onKeyPress = (e: globalThis.KeyboardEvent) => {
+      if (selectedNode.isNothing()) {
+        return;
+      }
+
+      if (e.code === "Space") {
+        // Create a sibling
+        // TODO: Figure out how to map tab
+        console.log("new sibling");
+      } else if (e.code === "Enter") {
+        // Create a child
+        console.log("new child");
+      }
+    };
+    // Attach keyboard listener once
+    window.addEventListener("keypress", onKeyPress);
+    return () => {
+      window.removeEventListener("keypress", onKeyPress);
+    };
+  }, [selectedNode]);
+
   return (
     <div className="app">
+      <pre className="debug">
+        <code>{JSON.stringify(state, null, 2)}</code>
+      </pre>
       <svg
+        className="canvas"
         ref={svg}
         viewBox="0 0 1000 1000"
         width="100%"
