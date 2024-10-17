@@ -1,4 +1,4 @@
-import { Maybe, Nothing } from "purify-ts";
+import { type Maybe, Nothing } from "purify-ts";
 
 export type ID = string;
 

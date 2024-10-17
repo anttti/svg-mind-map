@@ -31,7 +31,7 @@ const Node = ({
         stroke="var(--blue-200)"
         strokeWidth="8"
         rx="16"
-      ></rect>
+      />
     )}
 
     <rect
@@ -45,8 +45,8 @@ const Node = ({
       stroke={stroke}
       strokeWidth="4"
       rx="12"
-    ></rect>
+    />
   </>
 );
 
-export default Node;
+export { Node };
